@@ -1,0 +1,32 @@
+.songsList {
+  list-style: none;
+}
+
+.songItem {
+  background-color: #282828;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.songItem:hover {
+  background-color: #333333;
+}
+
+.songNumber {
+  color: #b3b3b3;
+  margin-right: 1rem;
+  min-width: 25px;
+}
+
+.songTitle {
+  flex: 1;
+}
+
+.songDuration {
+  color: #b3b3b3;
+} 

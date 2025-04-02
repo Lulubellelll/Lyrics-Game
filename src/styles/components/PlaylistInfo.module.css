@@ -1,0 +1,19 @@
+.playlistInfo {
+  background-color: #282828;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.playlistInfo h2 {
+  margin-bottom: 0.5rem;
+  color: #1DB954;
+}
+
+.playlistMeta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  color: #b3b3b3;
+  font-size: 0.9rem;
+} 
