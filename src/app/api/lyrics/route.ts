@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const data = await proxyResponse.json();
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("Server error:", error?.message || error);
+    // console.error("Server error:", error?.message || error);
     return NextResponse.json({ error: "Lyrics fetch failed" }, { status: 500 });
   }
 }

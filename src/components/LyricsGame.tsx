@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from '../styles/components/LyricsGame.module.css';
 import { Song } from '@/types';
 import LoadingSpinner from './LoadingSpinner';
+import { fetchLyrics } from '@/services/lyrics';
 
 interface LyricsGameProps {
   playlistInfo: {
@@ -40,26 +41,16 @@ const LyricsGame: React.FC<LyricsGameProps> = ({ playlistInfo, allSongs, onGuess
       const randomIndex = Math.floor(Math.random() * availableSongs.length);
       const selected = availableSongs[randomIndex];
       setCurrentSong(selected);
-      
-      try {
-        const response = await fetch(
-          `/api/lyrics?title=${encodeURIComponent(selected.title)}&artist=${encodeURIComponent(selected.artist)}`
-        );
-        const data = await response.json();
-        
-        if (data.lyrics) {
-          const lyricsLines = data.lyrics.split('\n');
-          const processedLyrics = lyricsLines.slice(1).join('\n');
-          setCurrentLyrics(processedLyrics);
-          setLoading(false);
-          return;
-        } else {
-          availableSongs.splice(randomIndex, 1);
-          console.log(`No lyrics found for "${selected.title}" by ${selected.artist}, trying another song`);
-        }
-      } catch (error) {
+
+      const data = await fetchLyrics(selected.title, selected.artist);
+          
+      if (data.lyrics) {
+        setCurrentLyrics(data.lyrics);
+        setLoading(false);
+        return
+      } else {
         availableSongs.splice(randomIndex, 1);
-        console.error('Error fetching lyrics:', error);
+        console.log(`No lyrics found for "${selected.title}" by ${selected.artist}, trying another song`);
       }
     }
     
