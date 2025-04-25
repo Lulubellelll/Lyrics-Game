@@ -7,9 +7,6 @@ A music trivia game that challenges players to identify songs from lyrics snippe
 - 📜 Get random lyrics snippets from playlist songs
 - 🔍 Typeahead suggestions for song guesses
 - 📊 Track your score and progress
-- 🎮 Multiple game modes (artist/song/both)
-- 🚦 Error handling and loading states
-- 📱 Responsive design
 
 ## Getting Started
 
