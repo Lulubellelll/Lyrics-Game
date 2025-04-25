@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lyrics Guessing Game
+
+A music trivia game that challenges players to identify songs from lyrics snippets, powered by Spotify playlists and Genius lyrics.
+
+## Features
+- 🎵 Connect any public Spotify playlist
+- 📜 Get random lyrics snippets from playlist songs
+- 🔍 Typeahead suggestions for song guesses
+- 📊 Track your score and progress
+- 🎮 Multiple game modes (artist/song/both)
+- 🚦 Error handling and loading states
+- 📱 Responsive design
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Spotify client ID & secret (`.env.local`)
+- Node.js v18+
+- Spotify playlist URL (public)
 
+### Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/lyrics-game.git
+cd lyrics-game
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Setup
+Create `.env.local`:
+```env
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+NEXT_PUBLIC_GENIUS_ACCESS_TOKEN=your_genius_token
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Running the App
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Usage
+1. Enter a Spotify playlist URL
+2. Game loads playlist metadata and songs
+3. Guess songs/artists from lyrics snippets
+4. Earn points for correct guesses
+5. Track your progress in real-time
 
-## Learn More
+## API Reference
+### Spotify Integration
+- Playlist validation
+- Song metadata extraction
+- Client credentials flow
 
-To learn more about Next.js, take a look at the following resources:
+### Lyrics Service
+- Genius API integration
+- Lyrics formatting/obfuscation
+- Error handling
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack
+- Next.js 14 (App Router)
+- TypeScript
+- Spotify Web API
+- Genius Lyrics API
+- CSS Modules
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/foo`)
+3. Commit changes (`git commit -am 'Add foo'`)
+4. Push to branch (`git push origin feature/foo`)
+5. Open Pull Request
