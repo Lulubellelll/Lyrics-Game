@@ -96,6 +96,7 @@
   border-radius: 8px;
   max-height: 400px;
   overflow-y: auto;
+  position: relative;
 }
 
 .lyricsContainer h3 {
@@ -123,4 +124,61 @@
   background-color: #333;
   color: #1DB954;
   font-weight: bold;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.nextLineButton {
+  display: block;
+  padding: 8px 16px;
+  background-color: #1DB954;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.nextLineButton:hover {
+  background-color: #1ed760;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+}
+
+.nextLineButton:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.skipSongButton {
+  display: block;
+  padding: 8px 16px;
+  background-color: #BF1207;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.skipSongButton:hover {
+  background-color: #e81409;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+}
+
+.skipSongButton:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }

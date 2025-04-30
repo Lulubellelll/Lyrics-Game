@@ -44,6 +44,9 @@
 .gameStatus {
   text-align: center;
   margin-bottom: 2rem;
+  padding: 1rem;
+  background-color: #282828;
+  border-radius: 8px;
 }
 
 .scoreDisplay {
@@ -53,10 +56,30 @@
   margin-bottom: 0.5rem;
 }
 
+.gameSettings {
+  font-size: 0.9rem;
+  color: #b3b3b3;
+  margin: 0.8rem 0;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.gameSettings span {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  background-color: #333;
+  border-radius: 4px;
+}
+
 .gameComplete {
   font-size: 1.5rem;
   color: #1DB954;
   font-weight: bold;
-  margin: 2rem 0;
+  margin: 2rem 0 1rem;
+  padding: 1rem;
   text-align: center;
+  background-color: rgba(29, 185, 84, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(29, 185, 84, 0.3);
 }
