@@ -1,0 +1,197 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: #121212;
+  color: white;
+  border-radius: 8px;
+  padding: 30px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modalContent h2 {
+  margin-top: 0;
+  margin-bottom: 25px;
+  text-align: center;
+  color: white;
+}
+
+.settingGroup {
+  margin-bottom: 25px;
+}
+
+.settingGroup label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: white;
+}
+
+.optionButtons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.optionButtons button {
+  padding: 10px 15px;
+  border: 2px solid #333;
+  background-color: #282828;
+  color: #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  outline: none;
+}
+
+.optionButtons button:hover {
+  border-color: #444;
+  background-color: #333;
+}
+
+.optionButtons button.selected {
+  border-color: #1DB954;
+  background-color: #1DB954;
+  color: white;
+  font-weight: bold;
+}
+
+.rangeContainer {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.rangeSlider {
+  flex: 1;
+  height: 12px;
+  appearance: none;
+  background: #333;
+  border-radius: 6px;
+  outline: none;
+}
+
+/* Track appearance */
+.rangeSlider::-webkit-slider-runnable-track {
+  height: 12px;
+  border-radius: 6px;
+  background: #333;
+}
+
+.rangeSlider::-moz-range-track {
+  height: 12px;
+  border-radius: 6px;
+  background: #333;
+}
+
+/* Thumb styling */
+.rangeSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #1DB954;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  margin-top: -6px; /* Center thumb vertically */
+}
+
+.rangeSlider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #1DB954;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.rangeSlider::-webkit-slider-thumb:hover {
+  background: #1ed760;
+  transform: scale(1.1);
+}
+
+.rangeSlider::-moz-range-thumb:hover {
+  background: #1ed760;
+  transform: scale(1.1);
+}
+
+.numberInput {
+  width: 60px;
+  padding: 6px 10px;
+  border: 2px solid #333;
+  background-color: #282828;
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+}
+
+.numberInput:focus {
+  border-color: #1DB954;
+}
+
+/* Hide number input arrows */
+.numberInput::-webkit-inner-spin-button, 
+.numberInput::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+.numberInput {
+  -moz-appearance: textfield;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.cancelButton, .saveButton {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.cancelButton {
+  background-color: #333;
+  color: white;
+}
+
+.cancelButton:hover {
+  background-color: #444;
+}
+
+.saveButton {
+  background-color: #1DB954;
+  color: white;
+}
+
+.saveButton:hover {
+  background-color: #1ed760;
+} 

@@ -1,0 +1,8 @@
+- Some song lyrics from Genius are empty because there is no match. Write a handling for these. (No lyrics available at Genius for this song or lyrics is not available at Genius answer is: {song name} etc.)
+- Some song names are like "xxx - remastered", "xxx (remastered)". Because of that Genius returns empty values. Write a hangling for these.
+- I couldn't find what to write PROXY_URL in .enc.local . So I get it direct from the main developer.
+
+Considerations:
+- Using multiple lyrics database can be conceivable. So even some lyrics are not in Genius, can be get from another database.
+- A guess result and summary window can be added (as in Whisperfy app)
+- After enter the link, link text box can be disappear. (Settings too)
