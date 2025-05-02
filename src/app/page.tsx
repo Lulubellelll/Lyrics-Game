@@ -6,6 +6,7 @@ import styles from '../styles/app/page.module.css';
 import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
 import LyricsGame from "@/components/LyricsGame";
+import GameSettings, { GameSettingsData } from "@/components/GameSettings";
 import { 
   isValidSpotifyPlaylistUrl, 
   extractPlaylistId, 
@@ -22,11 +23,28 @@ export default function Home() {
   const [error, setError] = useState('');
   const [playlistInfo, setPlaylistInfo] = useState<any>(null);
   const [songs, setSongs] = useState<Song[]>([]);
+  const [allPlaylistSongs, setAllPlaylistSongs] = useState<Song[]>([]);
 
   // New state for game
   const [gameActive, setGameActive] = useState(false);
   const [guessedSongs, setGuessedSongs] = useState<Song[]>([]);
   const [score, setScore] = useState(0);
+  
+  // New state for game settings
+  const [showSettings, setShowSettings] = useState(false);
+  const [gameSettings, setGameSettings] = useState<GameSettingsData>({
+    numberOfSongs: 5,
+    displayMode: 'line-by-line',
+    excludeSongName: true,
+    randomizeLyrics: false,
+    startFromRandomLine: true,
+  });
+  
+  // Store the playlist ID for use in handleSettingsSaved
+  const [currentPlaylistId, setCurrentPlaylistId] = useState<string>('');
+
+  // Add current song index tracking
+  const [currentSongIndex, setCurrentSongIndex] = useState<number>(1);
 
   const handleFetchPlaylist = async () => {
     if (!isValidSpotifyPlaylistUrl(playlistUrl)) {
@@ -40,6 +58,19 @@ export default function Home() {
       setError('Could not extract playlist ID from URL');
       return;
     }
+    
+    // Store the playlist ID for later use
+    setCurrentPlaylistId(playlistId);
+    
+    // Show settings modal instead of starting the game immediately
+    setShowSettings(true);
+  };
+  
+  const handleSettingsSaved = async (settings: GameSettingsData) => {
+    setGameSettings(settings);
+    setShowSettings(false);
+    
+    // Now start loading the playlist
     resetUI();
     setLoading(true);
   
@@ -52,9 +83,17 @@ export default function Home() {
       }
 
       // Fetch playlist data
-      const { playlistInfo: info, songs: trackList } = await fetchPlaylist(playlistId, accessToken);
+      const { playlistInfo: info, songs: trackList } = await fetchPlaylist(currentPlaylistId, accessToken);
       setPlaylistInfo(info);
-      setSongs(trackList);
+      
+      // Store all playlist songs for suggestions
+      setAllPlaylistSongs(trackList);
+      
+      // Use only the number of songs specified in settings
+      // Shuffle the tracks and select a subset based on numberOfSongs
+      const shuffledTracks = [...trackList].sort(() => Math.random() - 0.5);
+      const selectedTracks = shuffledTracks.slice(0, settings.numberOfSongs);
+      setSongs(selectedTracks);
       
       // Start game
       setGameActive(true);
@@ -67,20 +106,43 @@ export default function Home() {
       setLoading(false);
     }
   };
+  
+  const handleSettingsCancelled = () => {
+    setShowSettings(false);
+  };
 
-  const handleGuessResult = (correct: boolean, song?: Song) => {
-    if (correct && song) {
-      // Add to guessed songs
-      setGuessedSongs(prev => [...prev, song]);
-      
+  const handleGuessResult = (correct: boolean, song?: Song, wasSkipped: boolean = false) => {
+    if (!song) return;
+    
+    // Add to guessed songs
+    setGuessedSongs(prev => [...prev, song]);
+    
+    // Check if this was the last song before updating counters
+    const isLastSong = guessedSongs.length + 1 >= songs.length;
+    
+    if (correct) {
       // Update score
       setScore(prev => prev + 1);
       
-      // Show success message - no need for setTimeout here
+      // Only increment song index if not the last song
+      if (!isLastSong) {
+        setCurrentSongIndex(prev => prev + 1);
+      }
+      
+      // Show success message
       setError(`Correct! You guessed "${song.title}" by ${song.artist}`);
     } else {
-      // Show error for incorrect guess - no need for setTimeout here
-      setError('Incorrect! Try again.');
+      // Only increment song index if not the last song
+      if (!isLastSong) {
+        setCurrentSongIndex(prev => prev + 1);
+      }
+      
+      // Show different messages for wrong guess vs. skip
+      if (wasSkipped) {
+        setError(`Skipped "${song.title}" by ${song.artist}`);
+      } else {
+        setError(`Wrong guess! It was "${song.title}" by ${song.artist}`);
+      }
     }
   };
 
@@ -88,15 +150,16 @@ export default function Home() {
     setError('');
     setPlaylistInfo(null);
     setSongs([]);
+    setAllPlaylistSongs([]);
     setGameActive(false);
     setGuessedSongs([]);
     setScore(0);
+    setCurrentSongIndex(1);
   };
 
   const clearError = () => {
     setError('');
   };
-
 
   const handleClick = async () => {
     try {
@@ -121,7 +184,7 @@ export default function Home() {
         <button onClick={handleFetchPlaylist}>Start Game</button>
       </div>
       
-      {!gameActive && !loading && (
+      {!gameActive && !loading && !showSettings && (
         <p className={styles.instructions}>
           Enter a Spotify playlist URL to start the game. 
           You'll be shown lyrics from songs in the playlist and need to guess the song title.
@@ -132,14 +195,31 @@ export default function Home() {
       
       <ErrorMessage message={error} onClear={clearError} />
       
+      {/* Game Settings Modal */}
+      {showSettings && (
+        <GameSettings 
+          onSettingsSaved={handleSettingsSaved} 
+          onCancel={handleSettingsCancelled} 
+        />
+      )}
+      
       {gameActive && playlistInfo && (
         <div className={styles.gameStatus}>
           <div className={styles.scoreDisplay}>
-            Score: {score}/{songs.length}
+            Score: {score}/{songs.length} • Song: {currentSongIndex}/{songs.length}
+          </div>
+          <div className={styles.gameSettings}>
+            <span>Songs: {gameSettings.numberOfSongs}</span> | 
+            <span>Display: {gameSettings.displayMode === 'line-by-line' ? 'Line by Line' : 'All at Once'}</span> | 
+            <span>Exclude Names: {gameSettings.excludeSongName ? 'Yes' : 'No'}</span>
+          </div>
+          <div className={styles.gameSettings}>
+            <span>Random Start: {gameSettings.startFromRandomLine ? 'Yes' : 'No'}</span> | 
+            <span>Randomize Lyrics: {gameSettings.randomizeLyrics ? 'Yes' : 'No'}</span>
           </div>
           {songs.length === guessedSongs.length && songs.length > 0 && (
             <div className={styles.gameComplete}>
-              Game Complete! You've guessed all songs!
+              Game Over! You've guessed {score} of {songs.length} songs correctly!
             </div>
           )}
         </div>
@@ -149,7 +229,9 @@ export default function Home() {
         <LyricsGame 
           playlistInfo={playlistInfo}
           allSongs={songs.filter(song => !guessedSongs.some(g => g.number === song.number))}
+          suggestionSongs={allPlaylistSongs}
           onGuessResult={handleGuessResult}
+          gameSettings={gameSettings}
         />
       )}
     </div>
