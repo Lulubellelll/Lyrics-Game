@@ -83,3 +83,9 @@
   border-radius: 8px;
   border: 1px solid rgba(29, 185, 84, 0.3);
 }
+
+.centerButton {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}

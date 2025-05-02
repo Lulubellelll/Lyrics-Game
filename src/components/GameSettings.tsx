@@ -2,8 +2,9 @@ import React, { useState, ChangeEvent } from 'react';
 import styles from '../styles/components/GameSettings.module.css';
 
 export interface GameSettingsProps {
+  initialData: GameSettingsData;
   onSettingsSaved: (settings: GameSettingsData) => void;
-  onCancel: () => void;
+  onSettingsCancelled: () => void;
 }
 
 export interface GameSettingsData {
@@ -14,14 +15,8 @@ export interface GameSettingsData {
   startFromRandomLine: boolean;
 }
 
-const GameSettings: React.FC<GameSettingsProps> = ({ onSettingsSaved, onCancel }) => {
-  const [settings, setSettings] = useState<GameSettingsData>({
-    numberOfSongs: 5,
-    displayMode: 'line-by-line',
-    excludeSongName: true,
-    randomizeLyrics: false,
-    startFromRandomLine: true,
-  });
+const GameSettings: React.FC<GameSettingsProps> = ({ initialData, onSettingsSaved, onSettingsCancelled }) => {
+  const [settings, setSettings] = useState<GameSettingsData>(initialData);
 
   const handleSave = () => {
     onSettingsSaved(settings);
@@ -138,7 +133,7 @@ const GameSettings: React.FC<GameSettingsProps> = ({ onSettingsSaved, onCancel }
         </div>
 
         <div className={styles.modalActions}>
-          <button className={styles.cancelButton} onClick={onCancel}>Cancel</button>
+          <button className={styles.cancelButton} onClick={onSettingsCancelled}>Cancel</button>
           <button className={styles.saveButton} onClick={handleSave}>Start Game</button>
         </div>
       </div>
