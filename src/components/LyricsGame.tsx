@@ -4,6 +4,14 @@ import { Song } from '@/types';
 import LoadingSpinner from './LoadingSpinner';
 import { fetchLyrics } from '@/services/lyrics';
 import { GameSettingsData } from './GameSettings';
+import { 
+  filterBracketLines, 
+  computeNextLineIndices, 
+  implementLBLSetting, 
+  applyExcludeSongName, 
+  splitAndFilterLyrics, 
+  initializeLineDisplay 
+} from './LyricsGameHelpers';
 
 interface LyricsGameProps {
   playlistInfo: {
@@ -36,20 +44,7 @@ const LyricsGame: React.FC<LyricsGameProps> = ({
   const [nextLineIndex, setNextLineIndex] = useState<number>(0);
   const [justSelectedSuggestion, setJustSelectedSuggestion] = useState(false);
   
-  // Function to filter out lines that are entirely in square brackets
-  const filterBracketLines = (lines: string[]): string[] => {
-    return lines.filter(line => {
-      // Skip empty lines
-      if (!line.trim()) return false;
-      
-      // Check if the line is entirely within square brackets
-      // Match lines that start with [ and end with ]
-      const bracketRegex = /^\s*\[.*\]\s*$/;
-      return !bracketRegex.test(line);
-    });
-  };
-  
-  // Single useEffect to trigger song selection when needed.
+  // useEffect to trigger song selection when needed.
   useEffect(() => {
     if (!currentSong && allSongs.length > 0 && !loading) {
       selectRandomSong();
@@ -83,36 +78,19 @@ const LyricsGame: React.FC<LyricsGameProps> = ({
           
       if (data.lyrics) {
         // Process lyrics to hide song name if needed
-        let processedLyrics = data.lyrics;
-        if (gameSettings.excludeSongName && selected.title) {
-          // Replace song title with "..." (case insensitive)
-          const regex = new RegExp(selected.title, 'gi');
-          processedLyrics = processedLyrics.replace(regex, '...');
-        }
+        const processedLyrics = applyExcludeSongName(data.lyrics, selected.title, gameSettings.excludeSongName);
         
         // Split into lines and filter out lines in brackets
-        const rawLyricsLines: string[] = processedLyrics.split('\n');
-        const filteredLyricsLines = filterBracketLines(rawLyricsLines);
-        
-        // Filter out empty lines
-        const lyricsLines: string[] = filteredLyricsLines.filter((line: string) => line.trim() !== '');
+        const lyricsLines = splitAndFilterLyrics(processedLyrics);
         setLyricsArray(lyricsLines);
         
-        if (gameSettings.displayMode === 'line-by-line') {
-          let startIndex = 0;
-          
-          // Start from a random line if enabled
-          if (gameSettings.startFromRandomLine && lyricsLines.length > 0) {
-            startIndex = Math.floor(Math.random() * Math.min(lyricsLines.length, 8));
-          }
-          
-          setShownLineIndices([startIndex]);
-          setNextLineIndex(startIndex + 1);
-        } else {
-          // Show all lyrics at once
-          const allIndices = Array.from({ length: lyricsLines.length }, (_, i) => i);
-          setShownLineIndices(allIndices);
-        }
+        const { shownLineIndices, nextLineIndex } = initializeLineDisplay({
+          displayMode: gameSettings.displayMode,
+          startFromRandomLine: gameSettings.startFromRandomLine,
+          lyricsLength: lyricsLines.length,
+        });
+        setShownLineIndices(shownLineIndices);
+        setNextLineIndex(nextLineIndex);
         
         setCurrentLyrics(processedLyrics);
         setLoading(false);
@@ -128,49 +106,18 @@ const LyricsGame: React.FC<LyricsGameProps> = ({
   };
 
   const handleNextLine = () => {
-    if (gameSettings.displayMode === 'line-by-line' && lyricsArray.length > 0) {
-      if (gameSettings.randomizeLyrics) {
-        // Show a random unshown line (original behavior)
-        const notShownIndices = Array.from(
-          { length: lyricsArray.length }, 
-          (_, i) => i
-        ).filter(i => !shownLineIndices.includes(i));
-        
-        if (notShownIndices.length > 0) {
-          // Select a random line from the not-yet-shown lines
-          const randomIndex = Math.floor(Math.random() * notShownIndices.length);
-          const nextLineIdx = notShownIndices[randomIndex];
-          
-          setShownLineIndices(prev => [...prev, nextLineIdx].sort((a, b) => a - b));
-        }
-      } else {
-        // Show lines in sequential order
-        if (nextLineIndex < lyricsArray.length) {
-          setShownLineIndices(prev => [...prev, nextLineIndex].sort((a, b) => a - b));
-          setNextLineIndex(nextLineIndex + 1);
-        } else if (gameSettings.startFromRandomLine) {
-          // If we started randomly and reached the end, show any remaining lines
-          const notShownIndices = Array.from(
-            { length: lyricsArray.length }, 
-            (_, i) => i
-          ).filter(i => !shownLineIndices.includes(i));
-          
-          if (notShownIndices.length > 0) {
-            // Show the next unshown line in sequential order
-            const nextLineIdx = notShownIndices.sort((a, b) => a - b)[0];
-            setShownLineIndices(prev => [...prev, nextLineIdx].sort((a, b) => a - b));
-            
-            // Remove this index from future consideration
-            const remainingIndices = notShownIndices.filter(i => i !== nextLineIdx);
-            if (remainingIndices.length > 0) {
-              setNextLineIndex(remainingIndices.sort((a, b) => a - b)[0]);
-            }
-          }
-        }
-      }
-    }
+    const { updatedShownLineIndices, updatedNextLineIndex } = computeNextLineIndices({
+      displayMode: gameSettings.displayMode,
+      randomizeLyrics: gameSettings.randomizeLyrics,
+      startFromRandomLine: gameSettings.startFromRandomLine,
+      lyricsArray,
+      shownLineIndices,
+      nextLineIndex,
+    });
+    setShownLineIndices(updatedShownLineIndices);
+    setNextLineIndex(updatedNextLineIndex);
   };
-  
+
   const handleSkipSong = () => {
     if (currentSong) {
       // Skip to the next song without increasing score
