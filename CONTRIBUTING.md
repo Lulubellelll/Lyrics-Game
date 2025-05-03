@@ -10,7 +10,7 @@ This guide explains how to work together using GitHub best practices to keep thi
 A protected `main` branch is used, which means:
 
 - ✅ All changes must go through Pull Requests (PRs)
-- ✅ Every PR requires **1 review and approval**
+- ✅ Every PR requires **CODEOWNERS review**
 - 🔒 Force-pushes and deletions to `main` are disabled
 - 🧼 Use **"Squash and merge"** to keep history clean
 
@@ -50,9 +50,9 @@ For minor changes (docs, typos, formatting):
 
 - Still open a PR
 - Add a note like:  
-  > 📘 Docs-only change — safe to self-approve
+  > 📘 Docs-only change, safe to self-approve
 
-- Approve and squash-merge your own PR if it's clearly safe
+- Review and squash-merge your own PR if it's clearly safe
 
 ---
 

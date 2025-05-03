@@ -1,0 +1,5 @@
+# 👥 CODEOWNERS for Lyrics-Game
+# This file defines who reviews what parts of the repository.
+
+# Set default reviewers for everything
+*       @Lulubellelll @Porfador
