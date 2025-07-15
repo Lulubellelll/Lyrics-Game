@@ -1,23 +1,32 @@
 import {NextRequest, NextResponse} from "next/server";
-import { Client } from 'genius-lyrics';
+import axios from "axios";
 
+const GENIUS_API_KEY = process.env.GENIUS_API_KEY;
 
-const genius = new Client(process.env.GENIUS_ACCESS_TOKEN);
-export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
 
-    const results = await genius.songs.search('imagine jhon lennon');
-    console.log(results);
-    const song = results.find(
-      (s) =>
-        s.artist?.name?.toLowerCase().includes("jhonn lenon") ||
-        s.title.toLowerCase().includes("imagine")
-    );
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get("q");
 
-    if (!song) return NextResponse.json({ error: 'Song not found' });
+    if (!query) {
+        return NextResponse.json({ error: "Missing 'q' query parameter."}, {status: 400});
+    }
 
-    const lyrics = await song.lyrics();
-    return NextResponse.json({ lyrics });
+    try {
+        const response = await axios.get("https://api.genius.com/search", {
+          params: { q: query },
+          headers: {
+            Authorization: `Bearer ${GENIUS_API_KEY}`,
+          },
+        });
+    
+        return NextResponse.json(response.data);
+      } catch (error: any) {
+        return NextResponse.json(
+          { error: error.response?.data || error.message },
+          { status: error.response?.status || 500 }
+        );
+      }
 
 }
