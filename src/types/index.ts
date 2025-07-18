@@ -6,10 +6,12 @@ export interface PlaylistInfo {
   }
   
   export interface Song {
-    number: number;
     title: string;
     artist: string;
-    duration: string;
+    album?: string;
+    id?: string;
+    number?: number;
+    duration?: string;
   }
   
   export interface LyricsResponse {

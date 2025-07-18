@@ -1,10 +1,20 @@
 import type { GameSettingsData } from './GameSettings';
 
-export const filterBracketLines = (lines: string[]): string[] => {
-  return lines.filter(line => {
-    if (!line.trim()) return false;
+export interface LyricLine {
+  text: string;
+  time: {
+    total: number;
+    minutes: number;
+    seconds: number;
+    hundredths: number;
+  }
+}
+
+export const filterBracketLines = (lyrics: LyricLine[]): LyricLine[] => {
+  return lyrics.filter(line => {
+    if (!line.text.trim()) return false;
     const bracketRegex = /^\s*\[.*\]\s*$/;
-    return !bracketRegex.test(line);
+    return !bracketRegex.test(line.text);
   });
 };
 
@@ -12,7 +22,7 @@ export interface NextLineParams {
   displayMode: GameSettingsData['displayMode'];
   randomizeLyrics: boolean;
   startFromRandomLine: boolean;
-  lyricsArray: string[];
+  lyricsArray: LyricLine[];
   shownLineIndices: number[];
   nextLineIndex: number;
 }
@@ -61,20 +71,26 @@ export const implementLBLSetting = (startFromRandomLine: boolean, lyricsLength: 
 
 // Apply excludeSongName setting: replace occurrences of title
 export const applyExcludeSongName = (
-  lyrics: string,
+  lyrics: LyricLine[],
   title: string,
   excludeSongName: boolean
-): string => {
-  if (!excludeSongName || !title) return lyrics;
+): LyricLine[] => {
+  if (!excludeSongName || !title) {
+    return [...lyrics];
+  }
+  
   const regex = new RegExp(title, 'gi');
-  return lyrics.replace(regex, '...');
+  return lyrics.map(line => ({
+    ...line,
+    text: line.text.replace(regex, '...')
+  }));
 };
 
-// Split lyrics into lines and apply bracket and empty line filters
-export const splitAndFilterLyrics = (lyrics: string): string[] => {
-  const lines = lyrics.split('\n');
-  const filtered = filterBracketLines(lines);
-  return filtered.filter(line => line.trim() !== '');
+// Format lyrics array to extract just the text
+export const formatLyricsArray = (lyrics: LyricLine[]): string[] => {
+  return lyrics
+    .filter(line => line.text.trim() !== "")
+    .map(line => line.text);
 };
 
 export interface InitialLineDisplayParams {

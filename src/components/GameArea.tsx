@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorMessage from '@/components/ErrorMessage'
 import GameSettings, { GameSettingsData } from '@/components/GameSettings'
@@ -67,13 +67,19 @@ const GameArea: React.FC<GameAreaProps> = ({
             </div>
           </div>
 
-          <LyricsGame
-            playlistInfo={playlistInfo}
-            allSongs={songs.filter(s => !guessedSongs.includes(s))}
-            suggestionSongs={allPlaylistSongs}
-            onGuessResult={onGuessResult}
-            gameSettings={settings}
-          />
+          {useMemo(() => {
+            const unguessedSongs = songs.filter(s => !guessedSongs.includes(s));
+            return (
+              <LyricsGame
+                key={unguessedSongs.map(s => `${s.title}-${s.artist}`).join(',')}
+                playlistInfo={playlistInfo}
+                allSongs={unguessedSongs}
+                suggestionSongs={allPlaylistSongs}
+                onGuessResult={onGuessResult}
+                gameSettings={settings}
+              />
+            );
+          }, [songs, guessedSongs, playlistInfo, allPlaylistSongs, onGuessResult, settings])}
 
           {guessedSongs.length === songs.length && songs.length > 0 && (
             <>

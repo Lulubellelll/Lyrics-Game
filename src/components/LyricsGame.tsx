@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import styles from '../styles/components/LyricsGame.module.css';
 import { Song } from '@/types';
@@ -9,8 +11,9 @@ import {
   computeNextLineIndices, 
   implementLBLSetting, 
   applyExcludeSongName, 
-  splitAndFilterLyrics, 
-  initializeLineDisplay 
+  initializeLineDisplay, 
+  formatLyricsArray,
+  LyricLine
 } from './LyricsGameHelpers';
 
 interface LyricsGameProps {
@@ -26,30 +29,45 @@ interface LyricsGameProps {
   gameSettings: GameSettingsData;
 }
 
-const LyricsGame: React.FC<LyricsGameProps> = ({ 
-  playlistInfo, 
-  allSongs, 
-  suggestionSongs, 
-  onGuessResult, 
-  gameSettings 
-}) => {
-  const [currentLyrics, setCurrentLyrics] = useState('');
+const LyricsGame: React.FC<LyricsGameProps> = (props) => {
+  const { 
+    playlistInfo, 
+    allSongs, 
+    suggestionSongs, 
+    onGuessResult, 
+    gameSettings 
+  } = props;
+  
+  const [currentLyrics, setCurrentLyrics] = useState<LyricLine[]>([]);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [userGuess, setUserGuess] = useState('');
   const [suggestions, setSuggestions] = useState<Song[]>([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState<number>(-1);
   const [loading, setLoading] = useState(false);
-  const [lyricsArray, setLyricsArray] = useState<string[]>([]);
+  const [lyricsArray, setLyricsArray] = useState<LyricLine[]>([]);
   const [shownLineIndices, setShownLineIndices] = useState<number[]>([]);
   const [nextLineIndex, setNextLineIndex] = useState<number>(0);
   const [justSelectedSuggestion, setJustSelectedSuggestion] = useState(false);
+  const [availableSongs, setAvailableSongs] = useState<Song[]>([]);
   
-  // useEffect to trigger song selection when needed.
+  // Initialize availableSongs only once when component mounts
   useEffect(() => {
-    if (!currentSong && allSongs.length > 0 && !loading) {
-      selectRandomSong();
+    if (allSongs.length > 0) {
+      setAvailableSongs(allSongs);
     }
-  }, [allSongs, currentSong, loading]);
+  }, [allSongs.length]); // Only depend on allSongs.length
+
+  // Handle song selection
+  useEffect(() => {
+    const shouldSelectNewSong = !currentSong && availableSongs.length > 0 && !loading;
+    
+    if (shouldSelectNewSong) {
+      const selectSong = async () => {
+        await selectRandomSong();
+      };
+      selectSong();
+    }
+  }, [availableSongs.length, currentSong, loading]); // Only depend on length, not the entire array
 
   // Reset justSelectedSuggestion after it's been used
   useEffect(() => {
@@ -62,50 +80,95 @@ const LyricsGame: React.FC<LyricsGameProps> = ({
     }
   }, [justSelectedSuggestion]);
 
-  const selectRandomSong = async () => {
-    if (allSongs.length === 0) return;
-    
-    setLoading(true);
-    const availableSongs = [...allSongs]; // Create a copy to avoid mutating props
-    
-    // Try selecting a song with available lyrics
-    while (availableSongs.length > 0) {
-      const randomIndex = Math.floor(Math.random() * availableSongs.length);
-      const selected = availableSongs[randomIndex];
-      setCurrentSong(selected);
+  const selectRandomSong = React.useCallback(async () => {
+    if (availableSongs.length === 0) {
+      console.log('No more songs available, resetting song list');
+      setAvailableSongs(allSongs);
+      setLoading(false);
+      return;
+    }
 
-      const data = await fetchLyrics(selected.title, selected.artist);
+    setLoading(true);
+    const tempAvailableSongs = [...availableSongs];
+    
+    // Create a copy of the current state to avoid multiple state updates
+    let foundLyrics = false;
+    
+    while (tempAvailableSongs.length > 0 && !foundLyrics) {
+      const randomIndex = Math.floor(Math.random() * tempAvailableSongs.length);
+      const selected = tempAvailableSongs[randomIndex];
+      
+      console.log(`Trying to fetch lyrics for: ${selected.title} by ${selected.artist}`);
+      
+      try {
+        const lyrics = await fetchLyrics(selected.title, selected.artist);
+        
+        if (lyrics) {
+          // Filter out empty lines and lines in brackets
+          const filteredLyrics = filterBracketLines(lyrics);
           
-      if (data.lyrics) {
-        // Process lyrics to hide song name if needed
-        const processedLyrics = applyExcludeSongName(data.lyrics, selected.title, gameSettings.excludeSongName);
-        
-        // Split into lines and filter out lines in brackets
-        const lyricsLines = splitAndFilterLyrics(processedLyrics);
-        setLyricsArray(lyricsLines);
-        
-        const { shownLineIndices, nextLineIndex } = initializeLineDisplay({
-          displayMode: gameSettings.displayMode,
-          startFromRandomLine: gameSettings.startFromRandomLine,
-          lyricsLength: lyricsLines.length,
-        });
-        setShownLineIndices(shownLineIndices);
-        setNextLineIndex(nextLineIndex);
-        
-        setCurrentLyrics(processedLyrics);
-        setLoading(false);
-        return;
-      } else {
-        availableSongs.splice(randomIndex, 1);
+          if (filteredLyrics.length > 0) {
+            console.log(`Successfully found lyrics for: ${selected.title}`);
+            
+            // Process everything before updating state
+            const processedLyrics = applyExcludeSongName(
+              filteredLyrics, 
+              selected.title, 
+              gameSettings.excludeSongName
+            );
+            
+            const { shownLineIndices: newShownLineIndices, nextLineIndex: newNextLineIndex } = initializeLineDisplay({
+              displayMode: gameSettings.displayMode,
+              startFromRandomLine: gameSettings.startFromRandomLine,
+              lyricsLength: filteredLyrics.length,
+            });
+            
+            // Single state update to prevent multiple re-renders
+            setCurrentSong(selected);
+            setLyricsArray(filteredLyrics);
+            setShownLineIndices(newShownLineIndices);
+            setNextLineIndex(newNextLineIndex);
+            setCurrentLyrics(processedLyrics);
+            
+            // Update available songs
+            setAvailableSongs(prev => 
+              prev.filter(song => !(song.title === selected.title && song.artist === selected.artist))
+            );
+            
+            foundLyrics = true;
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching lyrics for ${selected.title}:`, error);
+      }
+      
+      if (!foundLyrics) {
         console.log(`No lyrics found for "${selected.title}" by ${selected.artist}, trying another song`);
+        tempAvailableSongs.splice(randomIndex, 1);
+        
+        if (tempAvailableSongs.length === 0) {
+          console.log('No more songs with available lyrics, resetting song list');
+          setAvailableSongs(allSongs);
+          setCurrentLyrics([{ 
+            text: "Sorry, couldn't find lyrics for any songs in this playlist.", 
+            time: { total: 0, minutes: 0, seconds: 0, hundredths: 0 } 
+          }]);
+          setLoading(false);
+          return;
+        }
       }
     }
     
     setLoading(false);
-    setCurrentLyrics("Sorry, couldn't find lyrics for any songs in this playlist.");
-  };
+  }, [allSongs, availableSongs, gameSettings.excludeSongName, gameSettings.displayMode, gameSettings.startFromRandomLine]);
+  
+
 
   const handleNextLine = () => {
+    if (!currentSong) return;
+    
     const { updatedShownLineIndices, updatedNextLineIndex } = computeNextLineIndices({
       displayMode: gameSettings.displayMode,
       randomizeLyrics: gameSettings.randomizeLyrics,
@@ -114,6 +177,28 @@ const LyricsGame: React.FC<LyricsGameProps> = ({
       shownLineIndices,
       nextLineIndex,
     });
+    
+    // Find the newly added line index
+    const newLineIndex = updatedShownLineIndices.find(idx => !shownLineIndices.includes(idx));
+    
+    if (newLineIndex !== undefined) {
+      // Get the current lyrics
+      const updatedLyrics = [...currentLyrics];
+      
+      // If we need to exclude the song name, process the new line
+      if (gameSettings.excludeSongName) {
+        const lineToUpdate = { ...lyricsArray[newLineIndex] };
+        const regex = new RegExp(currentSong.title, 'gi');
+        lineToUpdate.text = lineToUpdate.text.replace(regex, '...');
+        updatedLyrics[newLineIndex] = lineToUpdate;
+      } else {
+        // If not excluding, just copy the line as is
+        updatedLyrics[newLineIndex] = { ...lyricsArray[newLineIndex] };
+      }
+      
+      setCurrentLyrics(updatedLyrics);
+    }
+    
     setShownLineIndices(updatedShownLineIndices);
     setNextLineIndex(updatedNextLineIndex);
   };
@@ -125,7 +210,7 @@ const LyricsGame: React.FC<LyricsGameProps> = ({
       
       // Clear current song state
       setCurrentSong(null);
-      setCurrentLyrics('');
+      setCurrentLyrics([]);
       setLyricsArray([]);
       setShownLineIndices([]);
       setNextLineIndex(0);
@@ -234,7 +319,7 @@ const LyricsGame: React.FC<LyricsGameProps> = ({
     
     // Clear state regardless of correct or incorrect to move to next song
     setCurrentSong(null);
-    setCurrentLyrics('');
+    setCurrentLyrics([]);
     setLyricsArray([]);
     setShownLineIndices([]);
     setNextLineIndex(0);
@@ -282,13 +367,14 @@ const LyricsGame: React.FC<LyricsGameProps> = ({
         )}
       </div>
       
-      {currentLyrics && (
+      {currentLyrics.length > 0 && (
         <div className={styles.lyricsContainer}>
           <h3>Guess the song from these lyrics:</h3>
           <div className={styles.lyrics}>
-            {shownLineIndices.map((lineIndex) => (
-              <p key={lineIndex}>{lyricsArray[lineIndex]}</p>
-            ))}
+            {shownLineIndices.map((lineIndex) => {
+              const line = lyricsArray[lineIndex];
+              return line ? <p key={lineIndex}>{line.text}</p> : null;
+            })}
           </div>
           
           {gameSettings.displayMode === 'line-by-line' && shownLineIndices.length < lyricsArray.length && (
